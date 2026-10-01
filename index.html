@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Samuh Production Planner</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head>
+<body>
+<header><div><b>SAMUH</b><small>Production Planner</small></div>
+<label class="upload">Upload Monthly Plan<input id="file" type="file" accept=".xlsx,.xls,.csv" hidden></label></header>
+<main>
+<section class="hero"><div><span>OPEN ACCESS</span><h1>Monthly Production Planning</h1><p>Plan, edit, reschedule and monitor material readiness.</p></div><input id="month" type="month"></section>
+<nav><button class="active" data-tab="dash">Dashboard</button><button data-tab="plans">Plans</button><button data-tab="materials">Materials</button><button data-tab="changes">Change History</button></nav>
+<section id="dash" class="tab active">
+<div class="kpis"><article><small>Planned</small><strong id="kp">0 T</strong></article><article><small>Produced</small><strong id="ka">0 T</strong></article><article><small>Active Plants</small><strong id="kpl">0</strong></article><article><small>Shortage SKUs</small><strong id="ks">0</strong></article></div>
+<div class="cols"><div class="card"><h2>Material Readiness</h2><div id="matCards"></div></div><div class="card"><h2>Plant Performance</h2><div class="scroll"><table><thead><tr><th>Plant</th><th>Plan</th><th>Actual</th><th>%</th></tr></thead><tbody id="plantRows"></tbody></table></div></div></div>
+<div class="card"><h2>Production Plan</h2><div class="scroll"><table><thead><tr><th>Date</th><th>Plant</th><th>SKU</th><th>Product</th><th>Qty T</th><th>Actual T</th><th>Status</th></tr></thead><tbody id="dashRows"></tbody></table></div></div>
+</section>
+<section id="plans" class="tab"><div class="card"><div class="bar"><h2>Plans</h2><input id="search" placeholder="Search..."></div><div class="scroll"><table><thead><tr><th>Date</th><th>Plant</th><th>SKU</th><th>Product</th><th>Qty</th><th>Actual</th><th>Actions</th></tr></thead><tbody id="planRows"></tbody></table></div></div></section>
+<section id="materials" class="tab"><div class="card"><div class="bar"><h2>Materials</h2><button id="addMat">Add Material</button></div><div class="scroll"><table><thead><tr><th>Material</th><th>Required</th><th>Available</th><th>Shortage</th><th>Status</th><th></th></tr></thead><tbody id="matRows"></tbody></table></div></div></section>
+<section id="changes" class="tab"><div class="card"><div class="bar"><h2>Change History</h2><button id="clear">Clear</button></div><div class="scroll"><table><thead><tr><th>Time</th><th>Action</th><th>Plan/Material</th><th>Details</th></tr></thead><tbody id="changeRows"></tbody></table></div></div></section>
+</main>
+<div id="modal" class="modal hidden"><div class="box"><button id="x" class="close">×</button><h2 id="mt">Edit</h2><div id="mf"></div><div class="actions"><button id="cancel">Cancel</button><button id="save">Save</button></div></div></div>
+<script src="app.js"></script></body></html>
