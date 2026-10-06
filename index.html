@@ -1,22 +1,219 @@
-<!doctype html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Samuh Production Planner</title>
-<link rel="stylesheet" href="styles.css">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stock Live</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6f5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--g:#1f6f5c;--bg:#f3f5f4;--card:#fff;--ink:#111;--mute:#6b7773;--line:#e1e7e4;--amber:#e29b1a;--amberd:#9a6200}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+header{position:sticky;top:0;z-index:10;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0px)) 14px 14px;gap:8px}
+header h1{margin:0;font-size:19px}
+#upd{font-size:12.5px;display:flex;align-items:center;gap:6px}
+#upd i{width:8px;height:8px;border-radius:50%;background:#5eea9c;display:inline-block}
+#upd.err i{background:#ff8a80}
+#rf{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+.wrap{max-width:680px;margin:0 auto;padding:12px 12px 0}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px}
+.chip{flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 16px;font:600 15px inherit;font-family:inherit;color:var(--ink);cursor:pointer}
+.chip.on{background:var(--g);color:#fff;border-color:var(--g)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center}
+.box small{display:block;color:var(--mute);font-size:12.5px;margin-bottom:2px}
+.box b{font-size:18px;font-variant-numeric:tabular-nums}
+.ach{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.ach .t{color:var(--mute);font-size:13px}
+.pct{font-size:42px;font-weight:800;color:var(--amberd);line-height:1.1}
+.pct span{font-size:14px;font-weight:400;color:var(--mute);margin-left:4px}
+.bar{height:8px;background:#e8ecea;border-radius:99px;margin:8px 0 10px;overflow:hidden}
+.bar div{height:100%;background:var(--amber);border-radius:99px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.three div{background:var(--bg);border-radius:10px;padding:10px 4px;text-align:center}
+.three b{display:block;font-size:16px}
+.three small{color:var(--mute);font-size:12.5px}
+input[type=search],select{width:100%;font:inherit;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.tog{display:flex;align-items:center;gap:8px;margin:12px 2px;color:var(--mute);font-size:14px}
+.tog button{margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.card h3{margin:0 0 6px;font-size:16px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid var(--line);font-size:14px}
+.kv span:first-child{color:var(--mute);flex:0 0 42%}
+.kv span:last-child{text-align:right;word-break:break-word;font-variant-numeric:tabular-nums}
+.fl{animation:fl 2.5s ease-out}
+@keyframes fl{0%,40%{background:#fde68a}100%{background:transparent}}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff;max-height:68vh}
+table{border-collapse:collapse;width:100%;font-size:12.5px}td:first-child,th:first-child{position:sticky;left:0;background:#fff;font-weight:600;border-right:1px solid var(--line)}th:first-child{background:#eef2f0;z-index:2}
+th,td{padding:8px 9px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:#eef2f0;cursor:pointer;color:var(--mute)}
+.msg{text-align:center;color:var(--mute);padding:36px 10px}
+.errb{background:#fff;border:1px solid #c0392b;color:#c0392b;border-radius:10px;padding:10px;margin-bottom:10px;font-size:13.5px}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;border:0;border-top:3px solid transparent;padding:16px 4px;font:700 15px inherit;font-family:inherit;color:var(--mute);cursor:pointer}
+nav button.on{color:var(--g);border-top-color:var(--g)}
+</style>
+</head>
 <body>
-<header><div><b>SAMUH</b><small>Production Planner</small></div>
-<label class="upload">Upload Monthly Plan<input id="file" type="file" accept=".xlsx,.xls,.csv" hidden></label></header>
-<main>
-<section class="hero"><div><span>OPEN ACCESS</span><h1>Monthly Production Planning</h1><p>Plan, edit, reschedule and monitor material readiness.</p></div><input id="month" type="month"></section>
-<nav><button class="active" data-tab="dash">Dashboard</button><button data-tab="plans">Plans</button><button data-tab="materials">Materials</button><button data-tab="changes">Change History</button></nav>
-<section id="dash" class="tab active">
-<div class="kpis"><article><small>Planned</small><strong id="kp">0 T</strong></article><article><small>Produced</small><strong id="ka">0 T</strong></article><article><small>Active Plants</small><strong id="kpl">0</strong></article><article><small>Shortage SKUs</small><strong id="ks">0</strong></article></div>
-<div class="cols"><div class="card"><h2>Material Readiness</h2><div id="matCards"></div></div><div class="card"><h2>Plant Performance</h2><div class="scroll"><table><thead><tr><th>Plant</th><th>Plan</th><th>Actual</th><th>%</th></tr></thead><tbody id="plantRows"></tbody></table></div></div></div>
-<div class="card"><h2>Production Plan</h2><div class="scroll"><table><thead><tr><th>Date</th><th>Plant</th><th>SKU</th><th>Product</th><th>Qty T</th><th>Actual T</th><th>Status</th></tr></thead><tbody id="dashRows"></tbody></table></div></div>
-</section>
-<section id="plans" class="tab"><div class="card"><div class="bar"><h2>Plans</h2><input id="search" placeholder="Search..."></div><div class="scroll"><table><thead><tr><th>Date</th><th>Plant</th><th>SKU</th><th>Product</th><th>Qty</th><th>Actual</th><th>Actions</th></tr></thead><tbody id="planRows"></tbody></table></div></div></section>
-<section id="materials" class="tab"><div class="card"><div class="bar"><h2>Materials</h2><button id="addMat">Add Material</button></div><div class="scroll"><table><thead><tr><th>Material</th><th>Required</th><th>Available</th><th>Shortage</th><th>Status</th><th></th></tr></thead><tbody id="matRows"></tbody></table></div></div></section>
-<section id="changes" class="tab"><div class="card"><div class="bar"><h2>Change History</h2><button id="clear">Clear</button></div><div class="scroll"><table><thead><tr><th>Time</th><th>Action</th><th>Plan/Material</th><th>Details</th></tr></thead><tbody id="changeRows"></tbody></table></div></div></section>
-</main>
-<div id="modal" class="modal hidden"><div class="box"><button id="x" class="close">×</button><h2 id="mt">Edit</h2><div id="mf"></div><div class="actions"><button id="cancel">Cancel</button><button id="save">Save</button></div></div></div>
-<script src="app.js"></script></body></html>
+<header>
+  <h1>Stock Live</h1>
+  <div id="upd"><i></i><span id="ut">Loading…</span></div>
+  <button id="rf">Refresh</button>
+</header>
+<div class="wrap">
+  <div id="eb"></div>
+  <div class="chips" id="chips"></div>
+  <div class="sum" id="sum"></div>
+  <div id="achv"></div>
+  <input type="search" id="q" placeholder="Search anything in the sheet">
+  <div class="row2"><select id="f1"></select><select id="f2"></select></div>
+  <div class="row2" style="grid-template-columns:1fr"><select id="sort"></select><select id="vw" style="display:none"><option value="table">Table</option></select></div>
+  <div class="tog"><span id="cnt"></span><button id="rs">Reset filters</button></div>
+  <div id="list"><div class="msg">Loading…</div></div>
+</div>
+<nav id="nav"></nav>
+
+<script>
+/* ADD MORE TABS HERE: one line per tab, e.g. {name:"Laminate", url:"<published csv link>"} */
+const TABS=[
+ {name:"Box", url:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTmjBB6Ax-K7eqwgK2Z59kZVM4Sh9Y4kTtFYTZckoDgzjPmIDPqXfn9lumZ6BfrVutAn7noFeCCWl6Q/pub?output=csv"},
+ {name:"Laminate", url:""}, /* paste Laminate published CSV link between the quotes */
+ {name:"FG", url:""}       /* paste FG published CSV link between the quotes */
+];
+const REFRESH_MS=15000;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=v=>{const n=parseFloat(String(v).replace(/[,₹$€%\s]/g,""));return isNaN(n)?null:n};
+const fmt=n=>n.toLocaleString("en-IN",{maximumFractionDigits:2});
+let tab=0,head=[],rows=[],prev=new Map(),chipCol=-1,chip="All",sortKey="name",tsort=-1,tasc=true;
+let meta={numCols:[],catCols:[],nameCol:0};
+
+function parseCSV(t){const o=[];let r=[],f="",q=false;
+ for(let i=0;i<t.length;i++){const c=t[i];
+  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c=='"')q=true;else if(c==','){r.push(f);f=""}
+  else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;r.push(f);f="";o.push(r);r=[]}else f+=c}
+ if(f!==""||r.length){r.push(f);o.push(r)}
+ return o.filter(x=>x.some(v=>v.trim()!==""))}
+
+function analyse(){
+ const n=head.length;meta={numCols:[],catCols:[],nameCol:0};
+ let nameSet=false;
+ for(let c=0;c<n;c++){
+  const vals=rows.map(r=>(r[c]??"").trim()).filter(v=>v!=="");
+  const nums=vals.filter(v=>num(v)!==null);
+  if(vals.length&&nums.length>=vals.length*0.8)meta.numCols.push(c);
+  else{
+   if(!nameSet){meta.nameCol=c;nameSet=true}
+   const d=new Set(vals);
+   if(d.size>1&&d.size<=12&&vals.length>d.size)meta.catCols.push(c);
+  }
+ }
+ chipCol=meta.catCols.length?meta.catCols[0]:-1;
+ // optional plan/made detection by header names
+ const find=re=>head.findIndex(h=>re.test(h));
+ meta.plan=find(/plan|target|required/i);
+ meta.made=find(/made|actual|produc|achiev|done/i);
+ if(meta.plan===meta.made)meta.made=-1;
+}
+
+async function load(){
+ if(!TABS[tab].url){head=[];rows=[];$("eb").innerHTML="";$("chips").innerHTML="";$("sum").innerHTML="";$("achv").innerHTML="";$("cnt").textContent="";$("list").innerHTML='<div class="msg">No link added for '+esc(TABS[tab].name)+' yet.<br>Paste its published CSV link in the TABS list in the code.</div>';return}
+ try{
+  const res=await fetch(TABS[tab].url+"&t="+Date.now(),{cache:"no-store"});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  const d=parseCSV(await res.text());
+  if(!d.length)throw new Error("Sheet is empty");
+  const first=head.join("|");
+  head=d[0].map((h,i)=>h.trim()||"Column "+(i+1));rows=d.slice(1);
+  if(first!==head.join("|")){analyse();chip="All";prev=new Map();buildControls()}
+  $("eb").innerHTML="";$("upd").classList.remove("err");
+  $("ut").textContent="Updated "+new Date().toLocaleTimeString();
+  try{localStorage.setItem("sl"+tab,JSON.stringify({head,rows}))}catch(e){}
+ }catch(e){
+  $("upd").classList.add("err");$("ut").textContent="Offline";
+  $("eb").innerHTML='<div class="errb">Could not reach the sheet ('+esc(e.message)+'). Showing last saved data.</div>';
+  if(!rows.length){try{const c=JSON.parse(localStorage.getItem("sl"+tab));if(c){head=c.head;rows=c.rows;analyse();buildControls()}}catch(_){}}
+ }
+ render();
+}
+
+function uniq(c){return[...new Set(rows.map(r=>(r[c]??"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))}
+function buildControls(){
+ $("chips").innerHTML=chipCol<0?"":["All",...uniq(chipCol)].map(v=>'<button class="chip'+(v===chip?' on':'')+'" data-v="'+esc(v)+'">'+esc(v)+'</button>').join("");
+ [[ "f1",meta.catCols[1]],["f2",meta.catCols[2]]].forEach(([id,c])=>{
+  const s=$(id);
+  if(c===undefined){s.style.display="none";s.innerHTML="";return}
+  s.style.display="";s.dataset.c=c;
+  s.innerHTML='<option value="">All '+esc(head[c])+'</option>'+uniq(c).map(v=>'<option>'+esc(v)+'</option>').join("")});
+ let o='<option value="name">Sort: Name</option>';
+ meta.numCols.forEach(c=>{o+='<option value="lo'+c+'">Sort: '+esc(head[c])+' lowest</option><option value="hi'+c+'">Sort: '+esc(head[c])+' highest</option>'});
+ $("sort").innerHTML=o;$("sort").value=sortKey in{}?sortKey:"name";sortKey="name";
+}
+
+function view(){
+ const s=$("q").value.trim().toLowerCase();
+ let l=rows.map((x,i)=>({x,i}));
+ if(chipCol>=0&&chip!=="All")l=l.filter(o=>(o.x[chipCol]??"").trim()===chip);
+ ["f1","f2"].forEach(id=>{const e=$(id);if(e.style.display!=="none"&&e.value){const c=+e.dataset.c;l=l.filter(o=>(o.x[c]??"").trim()===e.value)}});
+ if(s)l=l.filter(o=>o.x.some(v=>String(v).toLowerCase().includes(s)));
+ const k=$("sort").value;
+ if(tsort>=0&&$("vw").value==="table"){l.sort((a,b)=>{const A=a.x[tsort]??"",B=b.x[tsort]??"",na=num(A),nb=num(B);
+   const c=(na!==null&&nb!==null)?na-nb:String(A).localeCompare(String(B),undefined,{numeric:true});return tasc?c:-c})}
+ else if(k==="name")l.sort((a,b)=>String(a.x[meta.nameCol]).localeCompare(String(b.x[meta.nameCol]),undefined,{numeric:true}));
+ else{const c=+k.slice(2),d=k.startsWith("lo")?1:-1;l.sort((a,b)=>d*((num(a.x[c])??0)-(num(b.x[c])??0)))}
+ return l;
+}
+
+function summary(l){
+ const cols=meta.numCols.slice(0,3);
+ let h="";
+ if(cols.length){h=cols.map(c=>{const t=l.reduce((a,o)=>a+(num(o.x[c])||0),0);return '<div class="box"><small>'+esc(head[c])+'</small><b>'+fmt(t)+'</b></div>'}).join("")}
+ else h='<div class="box"><small>Rows</small><b>'+l.length+'</b></div>';
+ $("sum").innerHTML=h;$("sum").style.gridTemplateColumns="repeat("+Math.max(1,Math.min(3,cols.length||1))+",1fr)";
+ if(meta.plan>=0&&meta.made>=0){
+  const P=l.reduce((a,o)=>a+(num(o.x[meta.plan])||0),0),M=l.reduce((a,o)=>a+(num(o.x[meta.made])||0),0);
+  const p=P?Math.round(M/P*100):0;
+  $("achv").innerHTML='<div class="ach"><div class="t">'+(chip==="All"?"All":esc(chip))+' · '+l.length+' items</div><div class="pct">'+p+'%<span>of plan achieved</span></div><div class="bar"><div style="width:'+Math.min(100,p)+'%"></div></div><div class="three"><div><b>'+fmt(P)+'</b><small>'+esc(head[meta.plan])+'</small></div><div><b>'+fmt(M)+'</b><small>'+esc(head[meta.made])+'</small></div><div><b>'+fmt(Math.max(0,P-M))+'</b><small>Left</small></div></div></div>';
+ }else $("achv").innerHTML="";
+}
+
+function render(){
+ if(!head.length)return;
+ const l=view();summary(l);
+ $("cnt").textContent=l.length+" of "+rows.length+" rows";
+ const next=new Map(),ch=(i,c,v)=>{const k=i+"|"+c;next.set(k,v);return prev.size&&prev.get(k)!==v};
+ if(!l.length){$("list").innerHTML='<div class="msg">No rows match.</div>';prev=next;return}
+ let h="";
+ if($("vw").value==="cards"){
+  l.forEach(o=>{h+='<div class="card"><h3'+(ch(o.i,meta.nameCol,o.x[meta.nameCol])?' class="fl"':'')+'>'+esc(o.x[meta.nameCol]||"—")+'</h3>';
+   head.forEach((n,c)=>{if(c===meta.nameCol)return;const v=o.x[c]??"";h+='<div class="kv"><span>'+esc(n)+'</span><span'+(ch(o.i,c,v)?' class="fl"':'')+'>'+esc(v||"—")+'</span></div>'});
+   h+='</div>'});
+ }else{
+  h='<div class="tw"><table><thead><tr>'+head.map((n,c)=>'<th data-c="'+c+'">'+esc(n)+(tsort===c?(tasc?" ▲":" ▼"):"")+'</th>').join("")+'</tr></thead><tbody>';
+  l.forEach(o=>{h+='<tr>'+head.map((_,c)=>{const v=o.x[c]??"";return '<td'+(ch(o.i,c,v)?' class="fl"':'')+'>'+esc(v)+'</td>'}).join("")+'</tr>'});
+  h+='</tbody></table></div>';
+ }
+ $("list").innerHTML=h;prev=next;
+}
+
+function buildNav(){
+ const n=$("nav");
+ 
+ n.innerHTML=TABS.map((t,i)=>'<button class="'+(i===tab?'on':'')+'" data-i="'+i+'">'+esc(t.name)+'</button>').join("");
+}
+$("nav").onclick=e=>{const b=e.target.closest("button");if(!b)return;tab=+b.dataset.i;head=[];rows=[];prev=new Map();buildNav();$("list").innerHTML='<div class="msg">Loading…</div>';load()};
+$("chips").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;chip=b.dataset.v;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x===b));render()};
+$("list").onclick=e=>{const th=e.target.closest("th");if(!th)return;const c=+th.dataset.c;tasc=tsort===c?!tasc:true;tsort=c;render()};
+["q","f1","f2","sort","vw"].forEach(id=>$(id).oninput=()=>{if(id==="sort")tsort=-1;render()});
+$("rs").onclick=()=>{$("q").value="";$("f1").value="";$("f2").value="";$("sort").value="name";chip="All";tsort=-1;buildControls();render()};
+$("rf").onclick=load;
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+buildNav();load();setInterval(()=>{if(!document.hidden)load()},REFRESH_MS);
+</script>
+</body>
+</html>
